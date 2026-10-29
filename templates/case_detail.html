@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+{% block title %}{{ case['case_number'] }}{% endblock %}
+{% block breadcrumb %}{{ case['case_number'] }}{% endblock %}
+
+{% block content %}
+<section class="page-heading">
+    <div>
+        <div class="eyebrow">{{ case['category']|upper }}</div>
+        <h1>{{ case['full_name'] }}</h1>
+        <p>{{ case['case_number'] }}{% if case['case_reference'] %} &middot; Ref {{ case['case_reference'] }}{% endif %}
+           &middot; <span class="badge badge-{{ case['status']|slug }}">{{ case['status'] }}</span></p>
+    </div>
+    <div class="row-actions">
+        <a class="button button-secondary" href="{{ url_for('edit_case', case_id=case['id']) }}"><i class="fa-solid fa-pen"></i> Edit</a>
+        <a class="button button-secondary" href="{{ url_for('transfers', case=case['case_number']) }}"><i class="fa-solid fa-right-left"></i> Transfer</a>
+        <button class="button button-secondary" type="button" onclick="window.print()"><i class="fa-solid fa-print"></i> Print</button>
+    </div>
+</section>
+
+<section class="panel">
+    <div class="section-heading"><h2>Details</h2></div>
+    <div class="detail-grid">
+        <div class="detail-item"><span>Age</span><p>{{ case['age'] if case['age'] is not none else '—' }}</p></div>
+        <div class="detail-item"><span>Gender</span><p>{{ case['gender'] or '—' }}</p></div>
+        <div class="detail-item"><span>Height</span><p>{{ (case['height'] ~ ' cm') if case['height'] else '—' }}</p></div>
+        <div class="detail-item"><span>District</span><p>{{ case['district'] }}</p></div>
+        <div class="detail-item"><span>Police station</span><p>{{ case['police_station'] or '—' }}</p></div>
+        <div class="detail-item"><span>Reported by</span><p>{{ reporter['full_name'] if reporter else '—' }}</p></div>
+        <div class="detail-item"><span>Date last seen</span><p>{{ case['date_missing']|pretty_date }}</p></div>
+        <div class="detail-item"><span>Date reported</span><p>{{ case['date_reported']|pretty_date }}</p></div>
+        <div class="detail-item"><span>Created</span><p>{{ case['created_at']|pretty_date }}</p></div>
+        <div class="detail-item wide"><span>Last-seen location</span><p>{{ case['last_seen_location'] or '—' }}</p></div>
+        <div class="detail-item wide"><span>Identifying features</span><p>{{ case['identifying_features'] or '—' }}</p></div>
+        <div class="detail-item wide"><span>Clothing / last-seen description</span><p>{{ case['clothing'] or '—' }}</p></div>
+    </div>
+</section>
+
+<div class="grid-2">
+    <section class="panel">
+        <div class="section-heading"><h2>Update status</h2></div>
+        <form method="POST" action="{{ url_for('update_case_status', case_id=case['id']) }}" class="inline-form">
+            {{ csrf_input() }}
+            <select name="status">
+                {% for s in STATUSES %}<option value="{{ s }}" {{ 'selected' if s == case['status'] }}>{{ s }}</option>{% endfor %}
+            </select>
+            <button class="button button-primary" type="submit">Save status</button>
+        </form>
+    </section>
+
+    <section class="panel">
+        <div class="section-heading"><h2>Add a note</h2></div>
+        <form method="POST" action="{{ url_for('add_note', case_id=case['id']) }}">
+            {{ csrf_input() }}
+            <textarea name="note" rows="2" maxlength="2000" placeholder="Follow-up, contact made, lead checked…" required></textarea>
+            <div class="form-actions"><button class="button button-primary" type="submit">Add note</button></div>
+        </form>
+    </section>
+</div>
+
+<section class="panel">
+    <div class="section-heading"><h2>Case notes</h2></div>
+    {% if case['notes'] %}<div class="notes-box">{{ case['notes'] }}</div>
+    {% else %}<p class="muted">No notes recorded.</p>{% endif %}
+</section>
+
+<section class="panel">
+    <div class="section-heading">
+        <div><h2>Linked records</h2><p>Possible matches queued for review. A match is a lead, not proof.</p></div>
+    </div>
+    {% if linked %}
+    <div class="table-wrap"><table>
+        <thead><tr><th>Pair</th><th>Score</th><th>Status</th>{% if current_user['role'] in ('Supervisor','Admin') %}<th>Review</th>{% endif %}</tr></thead>
+        <tbody>
+        {% for m in linked %}
+        <tr>
+            <td>{{ m['an'] }} {{ m['aname'] }} &harr; {{ m['bn'] }} {{ m['bname'] }}</td>
+            <td>{{ m['similarity'] }}% <span class="badge badge-{{ m['similarity']|score_label|lower }}">{{ m['similarity']|score_label }}</span></td>
+            <td><span class="badge badge-{{ m['status']|slug }}">{{ m['status'] }}</span></td>
+            {% if current_user['role'] in ('Supervisor','Admin') %}
+            <td>
+                <form method="POST" action="{{ url_for('update_match_status', match_id=m['id']) }}" class="inline-form">
+                    {{ csrf_input() }}
+                    <input type="hidden" name="next" value="{{ url_for('case_detail', case_id=case['id']) }}">
+                    <select name="status">{% for s in MATCH_STATUSES %}<option {{ 'selected' if s == m['status'] }}>{{ s }}</option>{% endfor %}</select>
+                    <button class="button button-secondary button-small" type="submit">Set</button>
+                </form>
+            </td>
+            {% endif %}
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table></div>
+    {% else %}<p class="muted">No linked records yet.</p>{% endif %}
+</section>
+
+<section class="panel">
+    <div class="section-heading">
+        <div><h2>Suggested similar records</h2><p>Computed from details on file. Review manually before saving.</p></div>
+    </div>
+    {% if suggestions %}
+    <div class="table-wrap"><table>
+        <thead><tr><th>Record</th><th>District</th><th>Score</th><th></th></tr></thead>
+        <tbody>
+        {% for score, other in suggestions %}
+        <tr>
+            <td><a href="{{ url_for('case_detail', case_id=other['id']) }}">{{ other['case_number'] }}</a> &middot; {{ other['full_name'] }}</td>
+            <td>{{ other['district'] }}</td>
+            <td>{{ score }}% <span class="badge badge-{{ score|score_label|lower }}">{{ score|score_label }}</span></td>
+            <td>
+                <form method="POST" action="{{ url_for('add_match') }}" class="inline-form">
+                    {{ csrf_input() }}
+                    <input type="hidden" name="case_id" value="{{ case['id'] }}">
+                    <input type="hidden" name="matched_case_id" value="{{ other['id'] }}">
+                    <button class="button button-secondary button-small" type="submit">Save for review</button>
+                    <a class="button button-secondary button-small" href="{{ url_for('compare', a=case['case_number'], b=other['case_number']) }}">Compare</a>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table></div>
+    {% else %}<p class="muted">No similar records found.</p>{% endif %}
+</section>
+
+<section class="panel">
+    <div class="section-heading"><h2>Transfer history</h2></div>
+    {% if transfers %}
+    <div class="table-wrap"><table>
+        <thead><tr><th>Date</th><th>From</th><th>To</th><th>Reason</th><th>Status</th></tr></thead>
+        <tbody>
+        {% for t in transfers %}
+        <tr><td>{{ t['created_at']|pretty_date }}</td><td>{{ t['from_district'] or '—' }}</td>
+            <td>{{ t['to_district'] }}</td><td>{{ t['reason'] }}</td>
+            <td><span class="badge badge-{{ t['status']|slug }}">{{ t['status'] }}</span></td></tr>
+        {% endfor %}
+        </tbody>
+    </table></div>
+    {% else %}<p class="muted">No transfers for this case.</p>{% endif %}
+</section>
+{% endblock %}

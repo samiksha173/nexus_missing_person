@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Audit Log{% endblock %}
+{% block breadcrumb %}Audit Log{% endblock %}
+
+{% block content %}
+<section class="page-heading">
+    <div>
+        <div class="eyebrow">ADMINISTRATION</div>
+        <h1>Audit log</h1>
+        <p>The 300 most recent recorded actions.</p>
+    </div>
+</section>
+
+<section class="panel">
+    {% if rows %}
+    <div class="table-wrap">
+        <table>
+            <thead><tr><th>Time</th><th>User</th><th>Action</th><th>Details</th><th>IP</th></tr></thead>
+            <tbody>
+            {% for r in rows %}
+            <tr>
+                <td class="nowrap">{{ r['created_at'] }}</td>
+                <td>{{ r['username'] or '—' }}</td>
+                <td><span class="badge">{{ r['action'] }}</span></td>
+                <td>{{ r['details'] or '' }}</td>
+                <td>{{ r['ip'] or '' }}</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state"><i class="fa-solid fa-clock-rotate-left"></i><h3>No activity yet</h3></div>
+    {% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit case' if editing else 'Register Person' }}{% endblock %}
+{% block breadcrumb %}{{ 'Edit case' if editing else 'Register Person' }}{% endblock %}
+
+{% block content %}
+<section class="page-heading">
+    <div>
+        <div class="eyebrow">{{ 'CASE UPDATE' if editing else 'CASE INTAKE' }}</div>
+        <h1>{{ 'Edit ' ~ case['case_number'] if editing else 'Register a case' }}</h1>
+        <p>Enter verified information from the authorized case report.</p>
+    </div>
+    <a href="{{ url_for('case_detail', case_id=case['id']) if editing else url_for('cases') }}"
+       class="button button-secondary"><i class="fa-solid fa-arrow-left"></i> Back</a>
+</section>
+
+<div class="notice notice-warning">
+    <i class="fa-solid fa-triangle-exclamation"></i>
+    <div><strong>Data protection notice</strong>
+    <p>Enter only information necessary for the investigation. Avoid unnecessary sensitive details.</p></div>
+</div>
+
+<form method="POST" class="panel">
+    {{ csrf_input() }}
+    <div class="form-section-heading">
+        <span class="form-section-icon"><i class="fa-solid fa-user"></i></span>
+        <div><h2>Personal information</h2><p>Basic details recorded in the case report.</p></div>
+    </div>
+
+    <div class="form-grid">
+        <div class="form-group">
+            <label for="category">Category</label>
+            <select id="category" name="category">
+                {% for c in CATEGORIES %}<option value="{{ c }}" {{ 'selected' if form.category == c }}>{{ c }}</option>{% endfor %}
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="full_name">Full name <span class="required">*</span></label>
+            <input type="text" id="full_name" name="full_name" maxlength="150" value="{{ form.full_name or '' }}">
+            <small>Leave blank only for an unidentified person.</small>
+        </div>
+        <div class="form-group">
+            <label for="age">Approximate age <span class="required">*</span></label>
+            <input type="number" id="age" name="age" min="0" max="125" value="{{ form.age if form.age is not none else '' }}">
+        </div>
+        <div class="form-group">
+            <label for="gender">Gender, if recorded</label>
+            <select id="gender" name="gender">
+                <option value="">Select</option>
+                {% for g in GENDERS %}<option value="{{ g }}" {{ 'selected' if form.gender == g }}>{{ g }}</option>{% endfor %}
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="height">Approximate height (cm)</label>
+            <input type="number" id="height" name="height" min="20" max="300" value="{{ form.height if form.height is not none else '' }}">
+        </div>
+        <div class="form-group">
+            <label for="status">Status</label>
+            <select id="status" name="status">
+                {% for s in STATUSES %}<option value="{{ s }}" {{ 'selected' if form.status == s }}>{{ s }}</option>{% endfor %}
+            </select>
+        </div>
+        <div class="form-group full-width">
+            <label for="identifying_features">Identifying features</label>
+            <textarea id="identifying_features" name="identifying_features" rows="3" maxlength="2000"
+                      placeholder="Distinguishing features recorded in the report">{{ form.identifying_features or '' }}</textarea>
+        </div>
+        <div class="form-group full-width">
+            <label for="clothing">Clothing or last-seen description</label>
+            <textarea id="clothing" name="clothing" rows="3" maxlength="2000">{{ form.clothing or '' }}</textarea>
+        </div>
+    </div>
+
+    <div class="form-divider"></div>
+
+    <div class="form-section-heading">
+        <span class="form-section-icon"><i class="fa-solid fa-file-circle-check"></i></span>
+        <div><h2>Case information</h2><p>Police report and jurisdiction details.</p></div>
+    </div>
+
+    <div class="form-grid">
+        <div class="form-group">
+            <label for="district">Reporting district <span class="required">*</span></label>
+            <input type="text" id="district" name="district" maxlength="120" required value="{{ form.district or '' }}">
+        </div>
+        <div class="form-group">
+            <label for="police_station">Police station</label>
+            <input type="text" id="police_station" name="police_station" maxlength="150" value="{{ form.police_station or '' }}">
+        </div>
+        <div class="form-group">
+            <label for="date_missing">Date last seen <span class="required">*</span></label>
+            <input type="date" id="date_missing" name="date_missing" required value="{{ form.date_missing or '' }}">
+        </div>
+        <div class="form-group">
+            <label for="date_reported">Date reported</label>
+            <input type="date" id="date_reported" name="date_reported" value="{{ form.date_reported or '' }}">
+        </div>
+        <div class="form-group">
+            <label for="case_reference">Official case reference (FIR / report no.)</label>
+            <input type="text" id="case_reference" name="case_reference" maxlength="100" value="{{ form.case_reference or '' }}">
+        </div>
+        <div class="form-group full-width">
+            <label for="last_seen_location">Last-seen location</label>
+            <textarea id="last_seen_location" name="last_seen_location" rows="2" maxlength="1000">{{ form.last_seen_location or '' }}</textarea>
+        </div>
+        <div class="form-group full-width">
+            <label for="notes">Case notes</label>
+            <textarea id="notes" name="notes" rows="4" maxlength="4000">{{ form.notes or '' }}</textarea>
+        </div>
+    </div>
+
+    <div class="form-actions">
+        <a class="button button-secondary" href="{{ url_for('case_detail', case_id=case['id']) if editing else url_for('cases') }}">Cancel</a>
+        <button type="submit" class="button button-primary"><i class="fa-solid fa-floppy-disk"></i> Save case</button>
+    </div>
+</form>
+{% endblock %}

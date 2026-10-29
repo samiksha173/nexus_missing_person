@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Reports{% endblock %}
+{% block breadcrumb %}Reports{% endblock %}
+
+{% block content %}
+<section class="page-heading">
+    <div>
+        <div class="eyebrow">SUPERVISION</div>
+        <h1>Reports</h1>
+        <p>{{ total }} case record(s) in total.</p>
+    </div>
+    <a class="button button-primary" href="{{ url_for('export_csv') }}"><i class="fa-solid fa-download"></i> Export CSV</a>
+</section>
+
+<div class="grid-2">
+    {% for title, rows in sections %}
+    <section class="panel">
+        <div class="section-heading"><h2>{{ title }}</h2></div>
+        {% if rows %}
+            {% set top = rows|map(attribute='n')|max %}
+            {% for r in rows %}
+            <div class="bar-row">
+                <span>{{ r['label'] or '—' }}</span>
+                <div class="bar-track"><div class="bar-fill" style="width: {{ (r['n'] / top * 100)|round|int }}%"></div></div>
+                <strong>{{ r['n'] }}</strong>
+            </div>
+            {% endfor %}
+        {% else %}<p class="muted">No data yet.</p>{% endif %}
+    </section>
+    {% endfor %}
+</div>
+{% endblock %}

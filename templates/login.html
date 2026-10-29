@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign In | NEXUS</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+</head>
+<body class="login-body">
+<main class="login-layout">
+    <section class="login-intro">
+        <div class="brand">
+            <span class="brand-icon"><i class="fa-solid fa-shield-halved"></i></span>
+            <span><strong>NEXUS</strong><small>CASE MANAGEMENT</small></span>
+        </div>
+
+        <div class="intro-copy">
+            <div class="eyebrow">SECURE INVESTIGATION PLATFORM</div>
+            <h1>Connect the cases.<br><span>Find the answers.</span></h1>
+            <p>A centralized workspace for missing-person investigations, authorized case
+               coordination and cross-district record review.</p>
+
+            <div class="login-feature">
+                <span><i class="fa-solid fa-magnifying-glass-chart"></i></span>
+                <div><strong>Assisted case matching</strong><p>Review possible links between records.</p></div>
+            </div>
+            <div class="login-feature">
+                <span><i class="fa-solid fa-building-shield"></i></span>
+                <div><strong>Inter-district coordination</strong><p>Manage case handovers and follow-up.</p></div>
+            </div>
+            <div class="login-feature">
+                <span><i class="fa-solid fa-lock"></i></span>
+                <div><strong>Controlled access</strong><p>Every action is recorded in an audit log.</p></div>
+            </div>
+        </div>
+    </section>
+
+    <section class="login-panel-wrap">
+        <div class="login-panel">
+            <div class="login-panel-heading">
+                <div class="login-symbol"><i class="fa-solid fa-user-shield"></i></div>
+                <h2>Welcome back</h2>
+                <p>Sign in to access your workspace.</p>
+            </div>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% for category, message in messages %}
+                <div class="flash-message {{ category }}"><span>{{ message }}</span></div>
+                {% endfor %}
+            {% endwith %}
+
+            <form method="POST" action="{{ url_for('login', next=request.args.get('next')) }}" class="login-form">
+                {{ csrf_input() }}
+                <label for="username">Officer username</label>
+                <div class="input-with-icon">
+                    <i class="fa-regular fa-user"></i>
+                    <input id="username" name="username" type="text" autocomplete="username"
+                           placeholder="Enter your username" required autofocus>
+                </div>
+
+                <label for="password">Password</label>
+                <div class="input-with-icon">
+                    <i class="fa-solid fa-lock"></i>
+                    <input id="password" name="password" type="password" autocomplete="current-password"
+                           placeholder="Enter your password" required>
+                    <button type="button" class="password-toggle" id="passwordToggle" aria-label="Show password">
+                        <i class="fa-regular fa-eye"></i>
+                    </button>
+                </div>
+
+                <button type="submit" class="button button-primary login-submit">
+                    Sign in securely <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </form>
+            <p class="login-legal">Access is restricted to authorized personnel.</p>
+        </div>
+    </section>
+</main>
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}Potential Matches{% endblock %}
+{% block breadcrumb %}Potential Matches{% endblock %}
+
+{% block content %}
+<section class="page-heading">
+    <div>
+        <div class="eyebrow">INVESTIGATIVE ASSISTANCE</div>
+        <h1>Potential matches</h1>
+        <p>Review possible relationships between records across districts.</p>
+    </div>
+    {% if current_user['role'] in ('Supervisor', 'Admin') %}
+    <form method="POST" action="{{ url_for('scan_matches') }}">
+        {{ csrf_input() }}
+        <button class="button button-primary" type="submit"><i class="fa-solid fa-magnifying-glass-chart"></i> Scan all records</button>
+    </form>
+    {% endif %}
+</section>
+
+<div class="notice notice-warning">
+    <i class="fa-solid fa-triangle-exclamation"></i>
+    <div><strong>Human verification is required</strong>
+    <p>Similarity indicates a lead only. Confirm records through approved procedures before any case decision.</p></div>
+</div>
+
+<section class="panel">
+    <form method="GET" class="filter-toolbar">
+        <select name="status" aria-label="Filter by status" onchange="this.form.submit()">
+            <option value="">All statuses</option>
+            {% for s in MATCH_STATUSES %}<option value="{{ s }}" {{ 'selected' if s == status }}>{{ s }}</option>{% endfor %}
+        </select>
+        <noscript><button class="button button-secondary" type="submit">Filter</button></noscript>
+    </form>
+
+    {% if rows %}
+    <div class="table-wrap">
+        <table>
+            <thead><tr><th>Record A</th><th>Record B</th><th>Score</th><th>Status</th><th></th></tr></thead>
+            <tbody>
+            {% for m in rows %}
+            <tr>
+                <td><a href="{{ url_for('case_detail', case_id=m['aid']) }}">{{ m['an'] }}</a><br>
+                    <small>{{ m['aname'] }} &middot; {{ m['adistrict'] }}</small></td>
+                <td><a href="{{ url_for('case_detail', case_id=m['bid']) }}">{{ m['bn'] }}</a><br>
+                    <small>{{ m['bname'] }} &middot; {{ m['bdistrict'] }}</small></td>
+                <td>{{ m['similarity'] }}% <span class="badge badge-{{ m['similarity']|score_label|lower }}">{{ m['similarity']|score_label }}</span></td>
+                <td><span class="badge badge-{{ m['status']|slug }}">{{ m['status'] }}</span></td>
+                <td>
+                    <div class="row-actions">
+                        <a class="button button-secondary button-small" href="{{ url_for('compare', a=m['an'], b=m['bn']) }}">Compare</a>
+                        {% if current_user['role'] in ('Supervisor', 'Admin') %}
+                        <form method="POST" action="{{ url_for('update_match_status', match_id=m['id']) }}" class="inline-form">
+                            {{ csrf_input() }}
+                            <select name="status">{% for s in MATCH_STATUSES %}<option {{ 'selected' if s == m['status'] }}>{{ s }}</option>{% endfor %}</select>
+                            <button class="button button-secondary button-small" type="submit">Set</button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state"><i class="fa-solid fa-link-slash"></i>
+        <h3>No potential matches</h3>
+        <p>Open a case and save a suggested record, or ask a supervisor to run a scan.</p></div>
+    {% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}Case Records{% endblock %}
+{% block breadcrumb %}Case Records{% endblock %}
+
+{% block content %}
+<section class="page-heading">
+    <div>
+        <div class="eyebrow">CASE MANAGEMENT</div>
+        <h1>Case records</h1>
+        <p>Search and review records you are authorized to access.</p>
+    </div>
+    <a href="{{ url_for('new_case') }}" class="button button-primary"><i class="fa-solid fa-plus"></i> New case</a>
+</section>
+
+<section class="panel">
+    <form method="GET" class="filter-toolbar">
+        <div class="search-field">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input name="q" type="search" value="{{ q }}" placeholder="Search by case number, name, district or station…">
+        </div>
+        <select name="category" aria-label="Category">
+            <option value="">All categories</option>
+            {% for c in CATEGORIES %}<option value="{{ c }}" {{ 'selected' if c == category }}>{{ c }}</option>{% endfor %}
+        </select>
+        <select name="status" aria-label="Status">
+            <option value="">All statuses</option>
+            {% for s in STATUSES %}<option value="{{ s }}" {{ 'selected' if s == status }}>{{ s }}</option>{% endfor %}
+        </select>
+        <button class="button button-primary" type="submit">Search</button>
+        {% if base_args %}<a class="button button-secondary" href="{{ url_for('cases') }}">Clear</a>{% endif %}
+    </form>
+
+    <div class="table-meta">
+        <span>{{ total }} record(s)</span>
+        <span><i class="fa-solid fa-lock"></i> Authorized records only</span>
+    </div>
+
+    {% if cases %}
+    <div class="table-wrap">
+        <table>
+            <thead><tr>
+                <th>Case</th><th>Person</th><th>Category</th><th>Age</th>
+                <th>District</th><th>Last seen</th><th>Status</th>
+            </tr></thead>
+            <tbody>
+            {% for c in cases %}
+            <tr>
+                <td class="case-id"><a href="{{ url_for('case_detail', case_id=c['id']) }}">{{ c['case_number'] }}</a></td>
+                <td>{{ c['full_name'] }}</td>
+                <td>{{ c['category'] }}</td>
+                <td>{{ c['age'] if c['age'] is not none else '—' }}</td>
+                <td>{{ c['district'] }}</td>
+                <td>{{ c['date_missing']|pretty_date }}</td>
+                <td><span class="badge badge-{{ c['status']|slug }}">{{ c['status'] }}</span></td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="pager">
+        <span>Page {{ page }} of {{ pages }}</span>
+        <span class="row-actions">
+            {% if page > 1 %}<a class="button button-secondary button-small" href="{{ url_for('cases', page=page - 1, **base_args) }}">&larr; Previous</a>{% endif %}
+            {% if page < pages %}<a class="button button-secondary button-small" href="{{ url_for('cases', page=page + 1, **base_args) }}">Next &rarr;</a>{% endif %}
+        </span>
+    </div>
+    {% else %}
+    <div class="empty-state"><i class="fa-solid fa-folder-open"></i>
+        <h3>No cases found</h3><p>Try a different search or register a new case.</p></div>
+    {% endif %}
+</section>
+{% endblock %}

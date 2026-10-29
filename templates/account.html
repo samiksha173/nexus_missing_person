@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Account{% endblock %}
+{% block breadcrumb %}Account{% endblock %}
+
+{% block content %}
+<section class="page-heading">
+    <div>
+        <div class="eyebrow">ACCOUNT</div>
+        <h1>Change password</h1>
+        <p>Signed in as <strong>{{ current_user['username'] }}</strong> ({{ current_user['role'] }}).</p>
+    </div>
+</section>
+
+{% if current_user['must_change'] %}
+<div class="notice notice-warning">
+    <i class="fa-solid fa-triangle-exclamation"></i>
+    <div><strong>Password change required</strong>
+    <p>Choose a new password before you can use the rest of the system.</p></div>
+</div>
+{% endif %}
+
+<form method="POST" class="panel narrow">
+    {{ csrf_input() }}
+    <div class="form-group">
+        <label for="current_password">Current password</label>
+        <input type="password" id="current_password" name="current_password" autocomplete="current-password" required>
+    </div>
+    <div class="form-group">
+        <label for="new_password">New password</label>
+        <input type="password" id="new_password" name="new_password" autocomplete="new-password" minlength="8" required>
+        <small>At least 8 characters, with letters and numbers.</small>
+    </div>
+    <div class="form-group">
+        <label for="confirm_password">Confirm new password</label>
+        <input type="password" id="confirm_password" name="confirm_password" autocomplete="new-password" required>
+    </div>
+    <div class="form-actions">
+        <button class="button button-primary" type="submit"><i class="fa-solid fa-key"></i> Update password</button>
+    </div>
+</form>
+{% endblock %}

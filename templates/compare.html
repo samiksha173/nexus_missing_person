@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}Compare Cases{% endblock %}
+{% block breadcrumb %}Compare Cases{% endblock %}
+
+{% block content %}
+<section class="page-heading">
+    <div>
+        <div class="eyebrow">RECORD REVIEW</div>
+        <h1>Compare cases</h1>
+        <p>Review two records side by side to support investigative assessment.</p>
+    </div>
+</section>
+
+<div class="notice notice-info">
+    <i class="fa-solid fa-circle-info"></i>
+    <div><strong>Comparison is not identification</strong>
+    <p>Similar details can occur in unrelated cases. Use authorized evidence and established verification procedures.</p></div>
+</div>
+
+<section class="panel">
+    <form method="GET" class="compare-form">
+        <div class="form-group">
+            <label for="a">First case number</label>
+            <input id="a" name="a" list="caseList" value="{{ a_id }}" placeholder="e.g. NX-2026-00001" required>
+        </div>
+        <div class="form-group">
+            <label for="b">Second case number</label>
+            <input id="b" name="b" list="caseList" value="{{ b_id }}" placeholder="e.g. NX-2026-00002" required>
+        </div>
+        <button class="button button-primary" type="submit"><i class="fa-solid fa-scale-balanced"></i> Compare</button>
+    </form>
+    <datalist id="caseList">
+        {% for o in options %}<option value="{{ o['case_number'] }}">{{ o['full_name'] }}</option>{% endfor %}
+    </datalist>
+</section>
+
+{% if result %}
+<section class="panel">
+    <div class="section-heading">
+        <div><h2>Comparison results</h2><p>Green rows have identical values.</p></div>
+        <div class="score-box">
+            <span class="score-ring">{{ result.score }}%</span>
+            <span class="badge badge-{{ result.score|score_label|lower }}">{{ result.score|score_label }} similarity</span>
+        </div>
+    </div>
+    <div class="table-wrap">
+        <table class="compare-table">
+            <thead><tr><th>Field</th><th>{{ result.a['case_number'] }}</th><th>{{ result.b['case_number'] }}</th></tr></thead>
+            <tbody>
+            {% for label, key in result.fields %}
+            {% set va = result.a[key] %}{% set vb = result.b[key] %}
+            <tr class="{{ 'same' if va not in (none, '') and va == vb }}">
+                <td>{{ label }}</td>
+                <td>{{ va if va not in (none, '') else '—' }}</td>
+                <td>{{ vb if vb not in (none, '') else '—' }}</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <p class="muted small-gap">The score compares name, age, gender, height, district and identifying features. It is a lead only.</p>
+</section>
+{% endif %}
+{% endblock %}

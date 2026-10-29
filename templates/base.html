@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}NEXUS{% endblock %} | NEXUS</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+</head>
+<body>
+<div class="app-shell">
+
+    <aside class="sidebar" id="sidebar">
+        <a class="brand" href="{{ url_for('dashboard') }}">
+            <span class="brand-icon"><i class="fa-solid fa-shield-halved"></i></span>
+            <span><strong>NEXUS</strong><small>CASE MANAGEMENT</small></span>
+        </a>
+
+        <div class="sidebar-label">WORKSPACE</div>
+        <nav class="nav-menu">
+            <a href="{{ url_for('dashboard') }}" class="{{ 'active' if request.endpoint == 'dashboard' }}">
+                <i class="fa-solid fa-chart-pie"></i> Dashboard</a>
+            <a href="{{ url_for('new_case') }}" class="{{ 'active' if request.endpoint == 'new_case' }}">
+                <i class="fa-solid fa-user-plus"></i> Register Person</a>
+            <a href="{{ url_for('cases') }}" class="{{ 'active' if request.endpoint in ('cases', 'case_detail', 'edit_case') }}">
+                <i class="fa-solid fa-folder-open"></i> Case Records</a>
+            <a href="{{ url_for('matches') }}" class="{{ 'active' if request.endpoint == 'matches' }}">
+                <i class="fa-solid fa-people-arrows-left-right"></i> Potential Matches</a>
+            <a href="{{ url_for('compare') }}" class="{{ 'active' if request.endpoint == 'compare' }}">
+                <i class="fa-solid fa-code-compare"></i> Compare Cases</a>
+            <a href="{{ url_for('transfers') }}" class="{{ 'active' if request.endpoint == 'transfers' }}">
+                <i class="fa-solid fa-right-left"></i> Case Transfers</a>
+        </nav>
+
+        {% if current_user and current_user['role'] in ('Supervisor', 'Admin') %}
+        <div class="sidebar-label">SUPERVISION</div>
+        <nav class="nav-menu">
+            <a href="{{ url_for('reports') }}" class="{{ 'active' if request.endpoint == 'reports' }}">
+                <i class="fa-solid fa-file-lines"></i> Reports</a>
+            {% if current_user['role'] == 'Admin' %}
+            <a href="{{ url_for('users') }}" class="{{ 'active' if request.endpoint == 'users' }}">
+                <i class="fa-solid fa-users-gear"></i> User Management</a>
+            <a href="{{ url_for('audit_log') }}" class="{{ 'active' if request.endpoint == 'audit_log' }}">
+                <i class="fa-solid fa-clock-rotate-left"></i> Audit Log</a>
+            {% endif %}
+        </nav>
+        {% endif %}
+
+        <div class="sidebar-footer">
+            <div><i class="fa-solid fa-lock"></i> Secure workspace</div>
+            <small>Authorized access only</small>
+        </div>
+    </aside>
+
+    <div class="main-area">
+        <header class="topbar">
+            <button class="icon-button mobile-menu" id="menuToggle" aria-label="Toggle navigation">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+            <div class="breadcrumb">
+                <span>NEXUS</span><i class="fa-solid fa-chevron-right"></i>
+                <strong>{% block breadcrumb %}Dashboard{% endblock %}</strong>
+            </div>
+            <div class="topbar-right">
+                <a class="officer-profile" href="{{ url_for('account') }}" title="Account settings">
+                    <span class="avatar"><i class="fa-solid fa-user-shield"></i></span>
+                    <span class="officer-info">
+                        <strong>{{ current_user['full_name'] if current_user else 'Officer' }}</strong>
+                        <small>{{ current_user['role'] if current_user else '' }}</small>
+                    </span>
+                </a>
+                <form method="POST" action="{{ url_for('logout') }}">
+                    {{ csrf_input() }}
+                    <button class="icon-button" type="submit" title="Sign out" aria-label="Sign out">
+                        <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                    </button>
+                </form>
+            </div>
+        </header>
+
+        <main class="page-content">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                <div class="flash-container">
+                    {% for category, message in messages %}
+                    <div class="flash-message {{ category }}">
+                        <span>{{ message }}</span>
+                        <button type="button" class="flash-close" aria-label="Dismiss">&times;</button>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            {% endwith %}
+            {% block content %}{% endblock %}
+        </main>
+
+        <footer class="page-footer">
+            <span>NEXUS &copy; {{ year }}</span>
+            <span>Investigative support and case coordination</span>
+        </footer>
+    </div>
+</div>
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

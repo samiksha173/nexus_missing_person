@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block title %}Case Transfers{% endblock %}
+{% block breadcrumb %}Case Transfers{% endblock %}
+
+{% block content %}
+<section class="page-heading">
+    <div>
+        <div class="eyebrow">INTER-DISTRICT COORDINATION</div>
+        <h1>Case transfers</h1>
+        <p>Request handovers and coordinate case ownership between districts.</p>
+    </div>
+</section>
+
+<div class="notice notice-info">
+    <i class="fa-solid fa-building-shield"></i>
+    <div><strong>Authorized handover only</strong>
+    <p>Transfers are approved by a supervisor and kept in the audit history. The case moves to the new district once a transfer is marked completed.</p></div>
+</div>
+
+<section class="panel">
+    <div class="section-heading"><div><h2>Request a transfer</h2><p>The sending district is taken from the case record.</p></div></div>
+    <form method="POST">
+        {{ csrf_input() }}
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="case_number">Case number <span class="required">*</span></label>
+                <input id="case_number" name="case_number" list="caseList" required maxlength="100" value="{{ prefill }}">
+                <datalist id="caseList">
+                    {% for o in options %}<option value="{{ o['case_number'] }}">{{ o['full_name'] }} ({{ o['district'] }})</option>{% endfor %}
+                </datalist>
+            </div>
+            <div class="form-group">
+                <label for="to_district">Receiving district <span class="required">*</span></label>
+                <input id="to_district" name="to_district" required maxlength="120">
+            </div>
+            <div class="form-group">
+                <label for="reason">Reason <span class="required">*</span></label>
+                <select id="reason" name="reason" required>
+                    <option value="">Select a reason</option>
+                    {% for r in TRANSFER_REASONS %}<option>{{ r }}</option>{% endfor %}
+                </select>
+            </div>
+            <div class="form-group full-width">
+                <label for="notes">Handover notes</label>
+                <textarea id="notes" name="notes" rows="3" maxlength="2000"></textarea>
+            </div>
+        </div>
+        <div class="form-actions">
+            <button type="submit" class="button button-primary"><i class="fa-solid fa-paper-plane"></i> Submit request</button>
+        </div>
+    </form>
+</section>
+
+<section class="panel">
+    <div class="section-heading"><div><h2>Transfer register</h2><p>All requests, newest first.</p></div></div>
+    {% if rows %}
+    <div class="table-wrap">
+        <table>
+            <thead><tr><th>ID</th><th>Case</th><th>From</th><th>To</th><th>Reason</th><th>Requested by</th><th>Status</th>
+                {% if current_user['role'] in ('Supervisor', 'Admin') %}<th>Decision</th>{% endif %}</tr></thead>
+            <tbody>
+            {% for t in rows %}
+            <tr>
+                <td class="case-id">#{{ t['id'] }}</td>
+                <td>{{ t['case_number'] }}<br><small>{{ t['full_name'] }}</small></td>
+                <td>{{ t['from_district'] or '—' }}</td>
+                <td>{{ t['to_district'] }}</td>
+                <td>{{ t['reason'] }}</td>
+                <td>{{ t['requester'] or '—' }}</td>
+                <td><span class="badge badge-{{ t['status']|slug }}">{{ t['status'] }}</span></td>
+                {% if current_user['role'] in ('Supervisor', 'Admin') %}
+                <td>
+                    <div class="row-actions">
+                    {% if t['status'] == 'Pending' %}
+                        {% for s, cls in (('Approved', 'success'), ('Rejected', 'danger')) %}
+                        <form method="POST" action="{{ url_for('update_transfer_status', transfer_id=t['id']) }}">
+                            {{ csrf_input() }}<input type="hidden" name="status" value="{{ s }}">
+                            <button class="button button-{{ cls }} button-small" type="submit">{{ 'Approve' if s == 'Approved' else 'Reject' }}</button>
+                        </form>
+                        {% endfor %}
+                    {% elif t['status'] == 'Approved' %}
+                        <form method="POST" action="{{ url_for('update_transfer_status', transfer_id=t['id']) }}">
+                            {{ csrf_input() }}<input type="hidden" name="status" value="Completed">
+                            <button class="button button-success button-small" type="submit">Complete</button>
+                        </form>
+                        <form method="POST" action="{{ url_for('update_transfer_status', transfer_id=t['id']) }}">
+                            {{ csrf_input() }}<input type="hidden" name="status" value="Rejected">
+                            <button class="button button-danger button-small" type="submit">Reject</button>
+                        </form>
+                    {% else %}<span class="muted">—</span>{% endif %}
+                    </div>
+                </td>
+                {% endif %}
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state"><i class="fa-solid fa-right-left"></i>
+        <h3>No transfer requests</h3><p>Requests will appear here once submitted.</p></div>
+    {% endif %}
+</section>
+{% endblock %}

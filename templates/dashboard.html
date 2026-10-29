@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block breadcrumb %}Dashboard{% endblock %}
+
+{% block content %}
+<section class="page-heading">
+    <div>
+        <div class="eyebrow">INVESTIGATION OVERVIEW</div>
+        <h1>Dashboard</h1>
+        <p>Monitor case activity and coordinate authorized investigative work.</p>
+    </div>
+    <a href="{{ url_for('new_case') }}" class="button button-primary">
+        <i class="fa-solid fa-plus"></i> Register a case</a>
+</section>
+
+<section class="stat-grid">
+    <article class="stat-card">
+        <div class="stat-top"><span>Total cases</span>
+            <span class="stat-icon icon-blue"><i class="fa-solid fa-folder-open"></i></span></div>
+        <strong>{{ stats.total }}</strong><small>Records in the workspace</small>
+    </article>
+    <article class="stat-card">
+        <div class="stat-top"><span>Active cases</span>
+            <span class="stat-icon icon-amber"><i class="fa-solid fa-magnifying-glass"></i></span></div>
+        <strong>{{ stats.open }}</strong><small>Open or under investigation</small>
+    </article>
+    <article class="stat-card">
+        <div class="stat-top"><span>Pending matches</span>
+            <span class="stat-icon icon-purple"><i class="fa-solid fa-people-arrows-left-right"></i></span></div>
+        <strong>{{ stats.matches }}</strong><small>Require officer review</small>
+    </article>
+    <article class="stat-card">
+        <div class="stat-top"><span>Open transfers</span>
+            <span class="stat-icon icon-green"><i class="fa-solid fa-right-left"></i></span></div>
+        <strong>{{ stats.transfers }}</strong><small>Pending or approved</small>
+    </article>
+</section>
+
+<section class="quick-actions">
+    <a href="{{ url_for('new_case') }}" class="quick-action">
+        <span class="quick-icon"><i class="fa-solid fa-user-plus"></i></span>
+        <span><strong>Register person</strong><small>Create a case record</small></span></a>
+    <a href="{{ url_for('cases') }}" class="quick-action">
+        <span class="quick-icon"><i class="fa-solid fa-folder-tree"></i></span>
+        <span><strong>Search cases</strong><small>Review case records</small></span></a>
+    <a href="{{ url_for('matches') }}" class="quick-action">
+        <span class="quick-icon"><i class="fa-solid fa-link"></i></span>
+        <span><strong>Review matches</strong><small>Inspect possible links</small></span></a>
+    <a href="{{ url_for('transfers') }}" class="quick-action">
+        <span class="quick-icon"><i class="fa-solid fa-building-circle-arrow-right"></i></span>
+        <span><strong>Manage transfers</strong><small>Coordinate districts</small></span></a>
+</section>
+
+<div class="grid-2">
+    <section class="panel">
+        <div class="section-heading">
+            <div><h2>Recent case records</h2><p>Latest records in your workspace.</p></div>
+            <a href="{{ url_for('cases') }}">View all <i class="fa-solid fa-arrow-right"></i></a>
+        </div>
+        {% if recent %}
+        <div class="table-wrap">
+            <table>
+                <thead><tr><th>Case</th><th>Person</th><th>District</th><th>Status</th></tr></thead>
+                <tbody>
+                {% for c in recent %}
+                <tr>
+                    <td class="case-id"><a href="{{ url_for('case_detail', case_id=c['id']) }}">{{ c['case_number'] }}</a></td>
+                    <td>{{ c['full_name'] }}</td>
+                    <td>{{ c['district'] }}</td>
+                    <td><span class="badge badge-{{ c['status']|slug }}">{{ c['status'] }}</span></td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state"><i class="fa-solid fa-folder-open"></i>
+            <h3>No cases yet</h3><p>Register the first case to get started.</p></div>
+        {% endif %}
+    </section>
+
+    <section class="panel">
+        <div class="section-heading"><div><h2>Cases by status</h2><p>Current distribution.</p></div></div>
+        {% for label, n in by_status.items() %}
+        <div class="bar-row">
+            <span>{{ label }}</span>
+            <div class="bar-track"><div class="bar-fill" style="width: {{ (n / max_status * 100)|round|int }}%"></div></div>
+            <strong>{{ n }}</strong>
+        </div>
+        {% endfor %}
+        <p class="muted small-gap">{{ stats.found }} case(s) marked as found.</p>
+    </section>
+</div>
+
+<div class="notice notice-info">
+    <i class="fa-solid fa-circle-info"></i>
+    <div><strong>Review before acting</strong>
+    <p>Automated similarities are leads for investigation, not identity confirmation.</p></div>
+</div>
+{% endblock %}
